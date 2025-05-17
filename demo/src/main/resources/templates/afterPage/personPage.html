@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Профиль пользователя</title>
+</head>
+<body>
+
+<div>
+
+    <div th:object="${person}">
+        <h2 th:text="*{username}">Имя пользователя</h2>
+    </div>
+
+    <form th:action="@{/auth/update}">
+        <button type="submit">
+            Изменить пользователя
+        </button>
+    </form>
+
+    <form th:method="DELETE" th:action="@{/auth/delete}">
+        <button type="submit">
+            Удалить пользователя
+        </button>
+    </form>
+
+    <form th:action="@{/logout}" th:method="POST">
+        <button type="submit">
+            Выход
+        </button>
+    </form>
+
+</div>
+
+</body>
+</html>

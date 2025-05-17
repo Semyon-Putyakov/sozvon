@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Редактирование логина</title>
+</head>
+<body>
+
+<h2>Изменение логина</h2>
+
+<form th:action="@{/auth/update}" th:method="PATCH" th:object="${person}">
+
+    <input type="hidden" th:field="*{id}">
+
+    <div>
+        <label for="username">Введите новый логин:</label>
+        <input type="text" th:field="*{username}" id="username">
+        <div th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></div>
+    </div>
+
+    <div>
+        <button type="submit">Изменить</button>
+    </div>
+
+</form>
+
+</body>
+</html>

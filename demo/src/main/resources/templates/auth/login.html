@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Вход в систему</title>
+</head>
+<body>
+<h2>Вход в аккаунт</h2>
+
+<form name th:action="@{/auth/login}" th:method="POST" th:object="${person}">
+    <div>
+        <label for="username">Логин:</label>
+        <input type="text" th:field="*{username}" id="username">
+    </div>
+
+    <div>
+        <label for="password">Пароль:</label>
+        <input type="password" th:field="*{password}" id="password">
+    </div>
+
+    <div th:if="${error}">
+        <p th:text="${error}"></p>
+    </div>
+
+    <div th:if="${param.error}" class="text-red-500 text-sm text-center">
+        Неправильные имя или пароль
+    </div>
+
+    <div>
+        <button type="submit">Войти</button>
+    </div>
+</form>
+
+<div>
+    <a href="/auth/registration">Зарегистрироваться</a>
+</div>
+
+</body>
+</html>
+
