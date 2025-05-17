@@ -11,6 +11,7 @@
 <form th:action="@{/auth/update}" th:method="PATCH" th:object="${person}">
 
     <input type="hidden" th:field="*{id}">
+    <input type="hidden" th:field="*{password}">
 
     <div>
         <label for="username">Введите новый логин:</label>

@@ -23,7 +23,9 @@ public class PersonService {
     }
 
     public String getPersonJWT(String username){
+        System.out.println("before generateJWT");
         String jwtToken = generateJWT("jwtGenerate_request", username,"jwtGenerate_request");
+        System.out.println("after generateJWT");
         return jwtToken;
     }
 
@@ -31,7 +33,7 @@ public class PersonService {
         PersonDTO personDTO = new PersonDTO();
         personDTO.setUsername(username);
 
-        String key = "getPersonByUsername_" + username;
+        String key = "getPersonByUsername";
         producerRecord(key, personDTO,"db_request");
 
         PersonDTO personDTODB;
@@ -61,21 +63,20 @@ public class PersonService {
 
     public void createPersonDTO(PersonDTO personDTO) {
         personDTO.setPassword(PasswordEncoding.encode(personDTO.getPassword()));
-        String key = "createPerson_" + personDTO.getUsername();
+        String key = "createPerson" + personDTO.getUsername();
         producerRecord(key, personDTO,"db_request");
     }
 
     public String updatePersonDTO(PersonDTO personDTO) {
-        String key = "updatePerson_" + personDTO.getUsername();
+        String key = "updatePerson";
         producerRecord(key, personDTO, "db_request");
-
         producerRecordString("jwtGenerate_request", personDTO.getUsername(),"jwtGenerate_request");
         String jwtToken = generateJWT("jwtGenerate_request", personDTO.getUsername(),"jwtGenerate_request");
         return jwtToken;
     }
 
     public void deletePersonDTO(PersonDTO personDTO) {
-        String key = "deletePerson_" + personDTO.getUsername();
+        String key = "deletePerson";
         producerRecord(key, personDTO,"db_request");
     }
 
@@ -92,8 +93,10 @@ public class PersonService {
     }
 
     private String generateJWT(String key, String username, String topic){
-        producerRecordString(key, username,topic);
-
+        System.out.println("before generateJWT1");
+        PersonDTO personDTO = new PersonDTO();
+        personDTO.setUsername(username);
+        producerRecord(key, personDTO,topic);
         ConsumerRecord<String,String> consumerRecord;
         try {
             consumerRecord = kafkaConsumer.queueGenerate();
@@ -101,7 +104,7 @@ public class PersonService {
             throw new RuntimeException(e);
         }
         String jwtToken = consumerRecord.value();
-
+        System.out.println("after generateJWT1");
         return jwtToken;
     }
 

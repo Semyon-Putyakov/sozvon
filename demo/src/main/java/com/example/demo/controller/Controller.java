@@ -50,7 +50,7 @@ public class Controller {
 
         PersonDTO personDTO = modelMapper.map(personModel, PersonDTO.class);
 
-        personValidator.validate(personDTO, bindingResult);
+        personValidator.validate(personModel, bindingResult);
         if (bindingResult.hasErrors()) {
             return "auth/registration";
         }
@@ -107,10 +107,14 @@ public class Controller {
     public String update(@ModelAttribute("person") @Valid PersonModel personModel, BindingResult bindingResult, HttpServletResponse response) {
         personValidator.validate(personModel, bindingResult);
         if (bindingResult.hasErrors()) {
+            System.out.println(bindingResult.getAllErrors());
             return "afterPage/update";
         }
         PersonDTO personDTO = modelMapper.map(personModel, PersonDTO.class);
+        System.out.println(123);
         String jwt = personService.updatePersonDTO(personDTO);
+        System.out.println(123123);
+
         setCookie(response, jwt);
         return "redirect:/auth/user";
     }

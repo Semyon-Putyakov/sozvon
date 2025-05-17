@@ -24,7 +24,7 @@ public class PersonValidator implements Validator {
 
     @Override
     public void validate(Object target, Errors errors) {
-        PersonDTO validatedPerson = (PersonDTO) target;
+        PersonModel validatedPerson = (PersonModel) target;
         var personResponse = personService.getPerson(validatedPerson.getUsername()).orElse(null);
         if (personResponse.getUsername() != null) {
             errors.rejectValue("username", null, "Такой пользователь уже существует");
