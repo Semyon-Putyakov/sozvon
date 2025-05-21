@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Профиль пользователя</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center text-gray-800">
+
+<div class="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md space-y-5 text-center">
+    <div th:object="${person}">
+        <h2 class="text-2xl font-semibold" th:text="*{username}">Имя пользователя</h2>
+    </div>
+
+    <form th:action="@{/auth/update}">
+        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-xl transition">
+            Изменить пользователя
+        </button>
+    </form>
+
+    <form th:method="DELETE" th:action="@{/auth/delete}">
+        <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-xl transition">
+            Удалить пользователя
+        </button>
+    </form>
+
+    <form th:action="@{/logout}" th:method="POST">
+        <button type="submit" class="w-full bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-xl transition">
+            Выйти
+        </button>
+    </form>
+</div>
+
+</body>
+</html>
