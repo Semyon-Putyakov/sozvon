@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:1010';
+const API_BASE_URL = 'http://111.88.119.164:1010';
 
 async function apiRequest(endpoint, options = {}) {
     const url = `${API_BASE_URL}${endpoint}`;
@@ -33,7 +33,7 @@ async function apiRequest(endpoint, options = {}) {
         }
 
         if (!response.ok) {
-            throw new Error(data?.message || 'Ошибка API');
+            throw new Error(data?.message || ' ');
         }
 
         return data;
