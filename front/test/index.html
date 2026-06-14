@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Application</title>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+</head>
+
+<style>/* ============================= */
+/*          ОБЩИЕ СТИЛИ          */
+/* ============================= */
+body {
+    font-family: "Segoe UI", Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    line-height: 1.5;
+    background: radial-gradient(circle at top left, #f1f1f1, #e4e4e4 80%);
+    color: #222;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 30px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+#logo-video {
+    width: 150px;
+    height: auto;
+    position: absolute;
+    top: 15px;
+    left: 20px;
+    z-index: 1000;
+}
+
+/* ============================= */
+/*          ЗАГОЛОВКИ            */
+/* ============================= */
+h2, h3, h4 {
+    margin: 0 0 15px 0;
+    font-weight: 600;
+    color: #111;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
+}
+
+/* ============================= */
+/*           ФОРМЫ               */
+/* ============================= */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+input[type="text"], input[type="password"] {
+    padding: 10px 12px;
+    border: 1px solid #bbb;
+    border-radius: 6px;
+    background: #fafafa;
+    font-size: 14px;
+    outline: none;
+    width: 100%; /* поле теперь на всю ширину */
+    box-sizing: border-box;
+}
+
+input[type="text"]:focus, input[type="password"]:focus {
+    border-color: #333;
+    background: #fff;
+}
+
+/* ============================= */
+/*           КНОПКИ              */
+/* ============================= */
+button {
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 6px;
+    transition: background 0.2s ease;
+    background: #ccc;
+    color: #222;
+    border: 1px solid #bbb;
+    text-align: center;
+}
+
+button:hover { background: #bbb; }
+button:active { background: #999; }
+
+.button-row {
+    display: flex;
+    gap: 10px;
+}
+
+
+/* ============================= */
+/*           ЧАТ                 */
+/* ============================= */
+.chat-container {
+    display: grid;
+    grid-template-columns: 440px 1fr 220px;
+    gap: 15px;
+    height: 600px;
+}
+
+.panel {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.08);
+}
+
+/* Добавляем визуальные разделители для панели */
+.panel h4 {
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 5px;
+    margin-bottom: 10px;
+}
+
+/* Левая и правая панели */
+.left-panel .list,
+.right-panel .list,
+#chat-participants {
+    margin-top: 10px;
+    overflow-y: auto;
+    flex-grow: 1;
+    border-top: 1px solid #eee;
+    padding: 5px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Средняя панель */
+.center-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Чат-контролы */
+.chat-controls {
+    background: #f8f8f8;
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 6px;
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Форма добавления участников */
+.participant-form {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-top: 5px;
+}
+
+.participant-form input {
+    padding: 6px 8px;
+    border-radius: 4px;
+    border: 1px solid #bbb;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* ============================= */
+/*        СООБЩЕНИЯ             */
+/* ============================= */
+.messages-window {
+    flex-grow: 1;
+    background: #f5f5f5;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    overflow-y: auto;
+}
+
+.message {
+    padding: 6px 10px;
+    border-radius: 10px;
+    max-width: 70%;
+    word-wrap: break-word;
+    font-size: 13px;
+}
+
+.message.self {
+    align-self: flex-end;
+    background: #d1ffd6;
+    border: 1px solid #a3e4a5;
+}
+
+.message.other {
+    align-self: flex-start;
+    background: #fff;
+    border: 1px solid #ccc;
+}
+
+.message .meta {
+    font-size: 11px;
+    color: #666;
+    margin-top: 2px;
+    text-align: right;
+}
+
+.message-input {
+    display: flex;
+    gap: 8px;
+}
+
+.message-input input {
+    flex: 1;
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* ============================= */
+/*       СПИСОК ЧАТОВ           */
+/* ============================= */
+#user-chats-list .chat-item {
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    background: #fafafa;
+    cursor: pointer;
+    text-align: center;
+    transition: background 0.2s;
+}
+
+#user-chats-list .chat-item:hover { background: #eee; }
+#user-chats-list .chat-item.selected {
+    background: #d1ffd6;
+    border-color: #a3e4a5;
+}
+
+/* ============================= */
+/*       WebRTC и Аудио          */
+/* ============================= */
+.webrtc-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 10px;
+    border-top: 1px solid #ddd;
+    padding-top: 10px; /* визуально отделяет от остального */
+}
+
+/* Кнопки "Создать/Закрыть комнату" */
+#voice-chat-panel > button {
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid #bbb;
+    background: #ccc;
+    color: #222;
+    cursor: pointer;
+    box-sizing: border-box;
+    margin-bottom: 5px;
+}
+
+#voice-chat-panel > button:hover { background: #bbb; }
+#voice-chat-panel > button:active { background: #999; }
+
+/* Кнопки Подключиться/Отключиться */
+.webrtc-section .button-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+.password-hint {
+    font-size: 12px;
+    color: #666;
+    margin-top: -8px; /* чуть подвинем ближе к полю */
+    margin-bottom: 8px;
+    line-height: 1.3;
+}
+
+.webrtc-section .button-row button {
+    flex: 1;
+    padding: 5px 8px;
+    font-size: 12px;
+    border-radius: 5px;
+    border: 1px solid #bbb;
+    background: #ccc;
+    color: #222;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+.webrtc-section .button-row button:hover { background: #bbb; }
+.webrtc-section .button-row button:active { background: #999; }
+
+/* Аудио-контролы */
+.audio-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.audio-controls button {
+    width: 100%;
+    padding: 6px;
+    border-radius: 5px;
+    border: 1px solid #bbb;
+    background: #ccc;
+    color: #222;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+.audio-controls button:hover { background: #bbb; }
+.audio-controls button:active { background: #999; }
+
+/* ============================= */
+/*       Блок информации о пользователе      */
+/* ============================= */
+.user-info-block {
+    background: #f5f5f5;        /* светлый серый фон */
+    border: 1px solid #ccc;     /* рамка */
+    border-radius: 6px;
+    padding: 6px 12px;          /* компактнее */
+    margin-bottom: 12px;
+    text-align: left;           /* выравнивание слева */
+    width: fit-content;         /* блок по ширине текста */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    display: flex;
+    align-items: center;
+    gap: 6px;                   /* расстояние между меткой и именем */
+    position: relative;
+    overflow: hidden;           /* чтобы полоска не вылазила */
+}
+
+/* Акцентная полоска слева */
+.user-info-block::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 4px;                 /* ширина полоски */
+    height: 100%;
+    background: #830006;        /* акцентный вишнёвый цвет */
+    border-radius: 6px 0 0 6px; /* скругление только слева */
+}
+
+/* Метка "Пользователь:" */
+.user-info-block span.label {
+    font-size: 18px;
+    color: #666;                /* серый оттенок */
+    font-weight: 500;
+}
+
+#output {
+    display: none;
+}
+
+/* Имя пользователя */
+.user-info-block span#current-username {
+    font-size: 22px;            /* аккуратный размер */
+    font-weight: 600;
+    color: #333;                /* темно-серый */
+}
+
+
+/* ============================= */
+/*       ПОИСК ЧАТА              */
+/* ============================= */
+#chat-title-search {
+    width: 100%; /* теперь поле на всю ширину контейнера */
+    max-width: none;
+    box-sizing: border-box;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid #bbb;
+}
+
+/* ============================= */
+/*          LOGOUT               */
+/* ============================= */
+#logout-section button {
+    background: #ccc;
+    color: #222;
+    border: 1px solid #bbb;
+}
+
+#logout-section button:hover { background: #bbb; }
+#logout-section button:active { background: #999; }
+
+/* ============================= */
+/*      ВИЗУАЛЬНЫЕ РАЗДЕЛЕНИЯ   */
+/* ============================= */
+.sub-section {
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 10px;
+    background: #fafafa;
+}
+</style>
+
+
+<body>
+<video id="logo-video" autoplay muted preload="auto" style="position: absolute; top: 0; left: 0; width: 150px; height: auto; z-index: 1000;">
+    <source src="videos/logo.mp4" type="video/mp4">
+</video>
+<div class="container">
+    <div id="auth-section" class="auth-container">
+        <h2>Добро пожаловать!</h2>
+        <p>Войдите или создайте новый аккаунт, чтобы начать общение</p>
+        <div class="form-group">
+            <input type="text" id="login" placeholder="Ваш логин" required>
+            <input type="password" id="password" placeholder="Ваш пароль" required>
+            <div class="password-hint">
+                Минимум 8 символов<br>
+                Обязательно хотя бы одна маленькая буква (a-z)<br>
+                Обязательно хотя бы одна большая буква (A-Z)<br>
+                Обязательно хотя бы одна цифра (0-9)<br>
+            </div>
+            <input type="text" id="username" placeholder="Имя (только для регистрации)">
+            <button class="btn-primary" onclick="login()">Войти</button>
+            <button class="btn-secondary" onclick="register()">Создать аккаунт</button>
+        </div>
+    </div>
+
+
+    <div id="user-section" class="section" style="display: none;">
+        <div class="sub-section">
+            <div class="user-info-block">
+                <span class="label">Пользователь:</span>
+                <span id="current-username-view"></span>
+            </div>
+            <h3>Управление профилем</h3>
+            <div class="form-group grid-2">
+                <input type="text" id="update-or-delete-username" placeholder="Новое имя пользователя">
+                <div>
+                    <button onclick="updateUser()">Обновить</button>
+                    <button onclick="deleteUser()">Удалить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="chat-section" class="section" style="display: none;">
+        <h2>Управление чатами</h2>
+
+        <div class="sub-section">
+            <h3>Поиск пользователей и создание личного чата</h3>
+            <div class="form-group">
+                <input type="text" id="username-search-chat" placeholder="Введите username">
+                <button onclick="searchUserForChat()">Найти пользователя</button>
+            </div>
+            <div id="search-results-chat"></div>
+        </div>
+
+        <div class="sub-section">
+            <h3>Создание группового чата</h3>
+            <button id="toggle-group-chat-form-btn" onclick="toggleGroupChatForm()">Создать групповой чат</button>
+
+            <div id="group-chat-form" style="display:none; margin-top:10px;">
+                <input type="text" id="group-username-search" placeholder="Введите username для поиска">
+                <button onclick="searchUsersForGroup()">Найти пользователя</button>
+
+                <div id="group-search-results" style="margin-top:10px;"></div>
+
+                <h4>Выбранные участники:</h4>
+                <div id="group-selected-users" style="margin-bottom:10px;"></div>
+
+                <input type="text" id="group-chat-title" placeholder="Название группового чата">
+                <button onclick="createGroupChat()">Создать групповой чат</button>
+            </div>
+        </div>
+
+        <div class="sub-section">
+            <h3>Поиск чатов</h3>
+            <div class="form-group" style="margin-bottom:10px;">
+                <input type="text" id="chat-title-search" placeholder="Введите название чата" style="width:300px;">
+                <button onclick="searchChats()">Найти чат</button>
+            </div>
+            <div id="chat-search-results" style="margin-top:10px; border:1px solid #ccc; padding:10px; max-height:200px; overflow-y:auto;"></div>
+
+            <div class="chat-container">
+                <!-- Левая колонка: ваши чаты -->
+                <div id="chat-list-panel" class="panel left-panel">
+                    <h4>Ваши чаты</h4>
+                    <div id="user-chats-list" class="list">
+                        <!-- Список чатов будет сюда -->
+                    </div>
+                </div>
+
+                <!-- Средняя колонка: чат -->
+                <div class="panel center-panel">
+                    <div id="chat-controls" class="chat-controls">
+                        <div><strong>Выбран чат:</strong> <span id="current-chat-title"></span></div>
+                        <div class="button-row" style="margin-top:5px;">
+                            <button onclick="deleteCurrentChat()">Удалить чат</button>
+                            <button onclick="toggleParticipants()">Участники</button>
+                        </div>
+
+                        <div id="participant-add-form" class="participant-form">
+                            <input type="text" id="username-search" placeholder="Добавить пользователя">
+                            <button onclick="searchUserToAdd()">Найти</button>
+                            <div id="user-search-result" class="list"></div>
+                        </div>
+
+                        <div id="chat-participants" class="list participants"></div>
+                    </div>
+
+                    <div id="chat-messages-window" class="messages-window"></div>
+
+                    <div class="message-input">
+                        <input type="text" id="message-text" placeholder="Введите сообщение...">
+                        <button onclick="sendMessage()">Отправить</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                getUserChats();
+            });
+        </script>
+    </div>
+    <div class="sub-section">
+        <h3>Ответ backend</h3>
+        <div id="output" class="output-box"></div>
+    </div>
+    <div class="section" style="margin-top:20px; display:none;" id="logout-section">
+        <button onclick="logout()">Выйти</button>
+    </div>
+</div>
+
+<script src="api.js"></script>
+<script src="auth.js"></script>
+<script src="user.js"></script>
+<script src="chat.js"></script>
+<script src="message.js"></script>
+</body>
+</html>
