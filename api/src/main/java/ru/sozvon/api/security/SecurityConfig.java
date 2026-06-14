@@ -66,10 +66,12 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000",
-                "http://localhost:8080",
+        configuration.setAllowedOrigins(Arrays.asList("http://111.88.119.164:1010",
+                "http://111.88.119.164:8080",
                 "https://mychat.com",
-                "http://localhost:63342/"));
+                "http://111.88.119.164:3000",
+                "http://111.88.119.164",
+        "http://localhost:63342/"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
         configuration.setAllowCredentials(true);
