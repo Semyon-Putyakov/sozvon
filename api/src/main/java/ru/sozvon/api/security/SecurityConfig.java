@@ -71,6 +71,9 @@ public class SecurityConfig {
                 "https://mychat.com",
                 "http://111.88.119.164:3000",
                 "http://111.88.119.164",
+                "http://localhost",
+                "http://localhost:3000",
+                "http://localhost:1010",
         "http://localhost:63342/"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
